@@ -35,9 +35,6 @@
       [:li [:a {:href (path-for :items)} "Items of site2"]]
       [:li [:a {:href "/broken/link"} "Broken link"]]]]))
 
-
-
-
 (defn items-page []
   (fn []
     [:span.main
@@ -47,7 +44,6 @@
                   [:a {:href (path-for :item {:item-id item-id})} "Item: " item-id]])
                (range 1 60))]]))
 
-
 (defn item-page []
   (fn []
     (let [routing-data (session/get :route)
@@ -56,14 +52,9 @@
        [:h1 (str "Item " item " of site2")]
        [:p [:a {:href (path-for :items)} "Back to the list of items"]]])))
 
-
 (defn about-page []
   (fn [] [:span.main
           [:h1 "About site2"]]))
-
-
-;; -------------------------
-;; Translate routes -> page components
 
 (defn page-for [route]
   (case route
@@ -72,7 +63,6 @@
     :items #'items-page
     :item #'item-page))
 
-(+ 1 1)
 ;; -------------------------
 ;; Page mounting component
 

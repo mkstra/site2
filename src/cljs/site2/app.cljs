@@ -3,11 +3,11 @@
     [reagent.core :as reagent :refer [atom]]
     [reagent.dom :as rdom]
     [reagent.session :as session]
-    [site2.util :refer [lister nav divme parsenode roamdata parse-block]]
+    [site2.util :refer [lister nav divme parsenode roamdata parse-block parse-to-hiccup]]
     [json-html.core :refer [json->hiccup]]
     ;[instaparse.core :as insta]
-
 ))
+
 (defonce app-state (atom {:title "WhichWeather"                          ;; <1>
                           :postal-code ""
                           :json roamdata
@@ -33,26 +33,22 @@
             ;(.then (download-object-as-json (clj->js {:hello "world"}) "myfile.json"))
     )
 
-
-
-
 ;filter ROAM JSON: get node + children with tag "X" and all the referenced nodes + their references
-
-
 (def pages
   {:about "/about"
    :contact "/contact"
    }
   )
 
-
-
 (defn app []
   [:div
+   (nav pages)
    ;(map parse-block (map :string roamdata))
    [:div {:class "with-sidebar"}
     [:div
-     [:div {:class "main"} (map (partial parsenode 0) (filter :title (get-in @app-state [:json])))]
+    [:div {:class "main"} (map parse-to-hiccup (filter :title (get-in @app-state [:json])))]
+
+     ;[:div {:class "main"} (map (partial parsenode 0) (filter :title (get-in @app-state [:json])))]
       ;[:div {:class "main"} (map (fn [x] [:p (:string x)]) (get-in @app-state [:json :children] ))]
      [:div {:class "sidebar"} "Sidebar"]]]
    [:div {:class "yell"} "YOOOOOZOOO"]]
