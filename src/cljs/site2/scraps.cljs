@@ -61,7 +61,26 @@
 
                    ;; ^{:key item} is for react indexing
 
+(comment
 
+  (defn parse-to-hi [node]
+    (if (nil? (:children node))
+    ;base case
+      (parse-block (:string node))
+    ;else
+      [:articlestr (and (:title node) [:h1 (:title node)])
+       [:p (or (:title node) (parse-block (:string node)))]
+       (map parse-to-hiccup (:children node))]))
+
+  (defn parsenode [cnt m]
+    (if (nil? (m :children))
+      (parse-block (:string m))
+      [:details {:style {:margin-left (str cnt "rem")}}
+       [:summary (or (:title m) (parse-block (:string m)))]
+
+       (map (partial parsenode (inc cnt)) (:children m))]))
+;(defn parse-n [m] (parsenode m 0))
+  )
 (def with-sidebar {:display "flex"
                    :flex-wrap "wrap"
                    :margin "-0.5rem"

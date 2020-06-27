@@ -1,5 +1,6 @@
-(ns site2.util)
-
+(ns site2.util
+  (:require [cljs.reader :refer [read-string]])
+  )
 
 (def example [{:s "you" :uid "123"
                :c [{:s "#[[public]]" :uid "124" :c [{:s "NAMME"}]}
@@ -247,111 +248,78 @@
                 :edit-time 1592485434828
                 :edit-email "strasser.ms@gmail.com"}])
 
-;
 
-;(defn find-nest [nodes id]
-;  (for (n nodes)
-;    (if (= (:uid n) id)
-;      n
-;      find-nested (:c n) id )
-;  ))
+(defn clip [s]
+  (subs s 2 (- (count s) 2)))
 
-  ;(loop [x 10]
-  ;  (when (> x 1)
-  ;    (println x)
-  ;    (recur (- x 2))))
+(defn bracket-gone [word]
+  ;improve: test and error safe
+  (second (re-find  #"\(([^()]*)\)" word))
+  )
+(defn get-ref [word]                                        ;check for nils
+  (filter #(= (:uid %) word) roamdata))
+(defn p [txt] [:p txt])
+(defn block-hic [txt]
+  (str [:span {:class "block-ref"} txt]))
 
-;(defn find-nested [nodes id]
-;  (for [n nodes]
-;    (if (nil? (n :c ))
-;      nil
-;      (if (=(:uid n) id)
-;        n
-;        (find-nested (n :c ) id)
-;        )
-;      ) ))
-;
-;(defn finder [coll id]
-;  (for [n coll]
-;
-;  (if (= (:uid n) id)
-;    nil
-;    (finder (rest coll) id)) )
-;)
-;
-;( defn tag? [node tag]
-;    (= tag (get-in node [:c 0 :s])) )
-;
-
-;refs first so we catch 2nd-order before parsing the pages
 (sort-by :title roamdata)
 
+
+(defn word-to-ref [word]
+  (-> word
+      bracket-gone
+      get-ref
+      first
+      :string
+      )
+  )
+(defn str-reducer [accum value]
+  (str accum
+       ;return normal string or the reference in hic str
+       (if (word-to-ref value)
+         (block-hic (word-to-ref value))
+         value)))
+
+(defn override-str [txt]
+  (-> txt
+      (#(clojure.string/split % " "))
+      (#(reduce str-reducer "" %))
+      p
+      str
+      read-string
+      ;(#(clojure.string/join % " ")) ;could use str too? has escape symbols
+      )
+  )
+
+;refs first so we catch 2nd-order before parsing the pages
 
 (defn has-brackets [txt]
   (clojure.string/includes? txt "(("))
 
-(defn clip [s]
-  (subs s 2 (- (count s) 2)))
-(defn get-ref [word]                                        ;check for nils
-  (filter #(= (:uid %) word) roamdata))
-(defn get-str [w] (:string (first (get-ref (clip w)))))
-(defn words [txt] (clojure.string/split txt #" "))
-
-(defn is-sentence [txt]
-  (> (count (words txt)) 1))
-
-(defn special-hic [txt]
-  (if (is-sentence txt) [:span {:class "block-ref"} txt] txt))
-
-(defn divme [text] [:div text])
-
-()
-
-
-
-(defn lister [items]
-  [:ul "asasas"
-   (for [item items]
-     ^{:key item} [:li "Item " item])])
 ;parse-block as parse-node
-(defn parse-block [blockstr]
-  [:p (map #(if (has-brackets %) [:span {:class "block-ref"} (get-str %)] [:span %])
-           (map #(clojure.string/join " " %) (partition-by has-brackets (words blockstr))))])
+;(defn parse-block [blockstr]
+;  [:p (map #(if (has-brackets %) [:span {:class "block-ref"} (get-str %)] [:span %])
+ ;          (map #(clojure.string/join " " %) (partition-by has-brackets (words blockstr))))])
 
 (defn nav [links]
   [:nav
    (for [item links]
      [:a {:href (val item)} (key item)])])
 
-(defn to-hiccup [words]
-  (for [w words]
-    ((str special-hic w)))
-  [:p (reduce (fn [w]) special-hic
-              words)])
-
-(defn replace-ref [txt]
-  (map #(or (get-str %) %) (words txt)))
+;(defn replace-ref [txt]
+  ;(map #(or (get-str %) %) (words txt)))
 
 (defn parse-to-hiccup [node]
   (if (nil? (:children node))
     ;base case
-    (parse-block (:string node))
+    (override-str (:string node))
     ;else
-    [:articlestr (and (:title node) [:h1 (:title node)])
-     [:p (or (:title node) (parse-block (:string node)) ) ]
-     (map parse-to-hiccup (:children node))]
-    )
+    [:div (and (:title node) [:h1 (:title node)])
+     (override-str (:string node) )
+     (map parse-to-hiccup (:children node))
+    ]
+   )
   )
-
-(defn parsenode [cnt m]
-  (if (nil? (m :children))
-    (parse-block (:string m))
-    [:details {:style {:margin-left (str cnt "rem")}}
-     [:summary (or (:title m) (parse-block (:string m)))]
-     
-     (map (partial parsenode (inc cnt)) (:children m))]))
-;(defn parse-n [m] (parsenode m 0))
-
 ;
 (defn has-value [key value]
   "Returns a predicate that tests whether a map contains a specific value"

@@ -3,7 +3,7 @@
     [reagent.core :as reagent :refer [atom]]
     [reagent.dom :as rdom]
     [reagent.session :as session]
-    [site2.util :refer [lister nav divme parsenode roamdata parse-block parse-to-hiccup]]
+    [site2.util :refer [nav roamdata parse-to-hiccup]]
     [json-html.core :refer [json->hiccup]]
     ;[instaparse.core :as insta]
 ))
@@ -43,10 +43,11 @@
 (defn app []
   [:div
    (nav pages)
+   [:p  "I'm jesus" [:span " yees you are"]]
    ;(map parse-block (map :string roamdata))
    [:div {:class "with-sidebar"}
     [:div
-    [:div {:class "main"} (map parse-to-hiccup (filter :title (get-in @app-state [:json])))]
+     [:div {:class "main"} [:article (map parse-to-hiccup (filter :title (get-in @app-state [:json]))) ] ]
 
      ;[:div {:class "main"} (map (partial parsenode 0) (filter :title (get-in @app-state [:json])))]
       ;[:div {:class "main"} (map (fn [x] [:p (:string x)]) (get-in @app-state [:json :children] ))]
