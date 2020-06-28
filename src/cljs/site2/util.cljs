@@ -1,6 +1,5 @@
 (ns site2.util
-  (:require [cljs.reader :refer [read-string]])
-  )
+  (:require [cljs.reader :refer [read-string]]))
 
 (def example [{:s "you" :uid "123"
                :c [{:s "#[[public]]" :uid "124" :c [{:s "NAMME"}]}
@@ -248,58 +247,67 @@
                 :edit-time 1592485434828
                 :edit-email "strasser.ms@gmail.com"}])
 
+(def testnode (nth roamdata 2))
+(def tt (:string testnode))
 
 (defn clip [s]
   (subs s 2 (- (count s) 2)))
 
 (defn bracket-gone [word]
   ;improve: test and error safe
-  (second (re-find  #"\(([^()]*)\)" word))
-  )
+  (or 
+   (and (string? word) (second (re-find  #"\(([^()]*)\)" word)))
+   word))
+  
 (defn get-ref [word]                                        ;check for nils
   (filter #(= (:uid %) word) roamdata))
-(defn p [txt] [:p txt])
-(defn block-hic [txt]
-  (str [:span {:class "block-ref"} txt]))
+
+(defn p [txt] 
+  (into [:p] txt ))
 
 (sort-by :title roamdata)
-
 
 (defn word-to-ref [word]
   (-> word
       bracket-gone
       get-ref
       first
-      :string
-      )
+
+      :string)
   )
-(defn str-reducer [accum value]
-  (str accum
-       ;return normal string or the reference in hic str
-       (if (word-to-ref value)
-         (block-hic (word-to-ref value))
-         value)))
+
+(defn str-split [txt]
+  (clojure.string/split txt " ")
+  )
+
+
+  (defn block-hic [txt]
+    [:span {:class "block-ref"} txt])
+
+
+
+(defn lookup [word]
+  (if (word-to-ref word)
+    (block-hic (word-to-ref word))
+    word))
+
 
 (defn override-str [txt]
   (-> txt
-      (#(clojure.string/split % " "))
-      (#(reduce str-reducer "" %))
-      p
-      str
-      read-string
-      ;(#(clojure.string/join % " ")) ;could use str too? has escape symbols
-      )
-  )
+      str-split
+      ;(doto println)
+      (#(map lookup %))
+      (#(map lookup %))
+      (#(interpose " " %))
+      (#(into [:p] %))
+      ))
+
+  
 
 ;refs first so we catch 2nd-order before parsing the pages
 
-(defn has-brackets [txt]
-  (clojure.string/includes? txt "(("))
+;; => #'site2.util/has-brackets
 
-;parse-block as parse-node
-;(defn parse-block [blockstr]
-;  [:p (map #(if (has-brackets %) [:span {:class "block-ref"} (get-str %)] [:span %])
- ;          (map #(clojure.string/join " " %) (partition-by has-brackets (words blockstr))))])
 
 (defn nav [links]
   [:nav
@@ -314,14 +322,39 @@
     ;base case
     (override-str (:string node))
     ;else
-    [:div (and (:title node) [:h1 (:title node)])
-     (override-str (:string node) )
-     (map parse-to-hiccup (:children node))
-    ]
-   )
-  )
+    [:div (or 
+           (and (:title node) [:h1 (:title node)])
+           (override-str (:string node))
+           )
+     (map parse-to-hiccup (:children node))]))
 ;
 (defn has-value [key value]
   "Returns a predicate that tests whether a map contains a specific value"
   (fn [m]
     (= value (m key))))
+
+
+(comment
+  (def testcoll '("aaa"
+                 [:span "YOLO"]
+                 "Fractal"
+                 "was"
+                 "a"
+                 "[[less"
+                 "wrong]]"
+                 "way"
+                 "to"
+                 "view"
+                 "scaling"
+                 "than"
+                 "euclidian"
+                 "[[geometry]]"))
+  
+  (read-string (str [:div 444 [:span {:class "block-ref"} "A B C"]]))
+  
+  (reduce (fn [accum value]
+            (str accum " "
+       ;return normal string or the reference in hic str
+                 (lookup value)))            
+      "" ["Hallo" "wwww" "((w2bxHamUp))"])
+  )

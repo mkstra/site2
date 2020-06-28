@@ -81,6 +81,13 @@
        (map (partial parsenode (inc cnt)) (:children m))]))
 ;(defn parse-n [m] (parsenode m 0))
   )
+
+;parse-block as parse-node
+;(defn parse-block [blockstr]
+;  [:p (map #(if (has-brackets %) [:span {:class "block-ref"} (get-str %)] [:span %])
+ ;          (map #(clojure.string/join " " %) (partition-by has-brackets (words blockstr))))])
+
+
 (def with-sidebar {:display "flex"
                    :flex-wrap "wrap"
                    :margin "-0.5rem"

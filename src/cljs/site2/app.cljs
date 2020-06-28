@@ -43,6 +43,16 @@
 (defn app []
   [:div
    (nav pages)
+   
+   [:p
+    "  This illustrates the intimate relationship between power laws and 
+     [[fractal]]s. Power law distributions, as we saw in chapter 15, 
+     figure 15.6, are [[fractal]]s—they are self-similar at all scales of magnification, and a power-law’s exponent gives the dimension of the corresponding [[fractal]]
+     [:span {:class \"block-ref\"} \"cells in most organisms
+     have hundreds of different metabolic pathways, many 
+     interconnecting, forming networks of metabolic reactions. Albert-László Barabási and colleagues looked in detail at the structure of metabolic networks in forty-three different organisms and found that they all were “well fitted” by a power-law distribution—i.e., are scale free. \"]"]
+   
+   [:span 555 [:span 333]]
    [:p  "I'm jesus" [:span " yees you are"]]
    ;(map parse-block (map :string roamdata))
    [:div {:class "with-sidebar"}
